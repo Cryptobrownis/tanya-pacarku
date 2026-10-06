@@ -16,7 +16,7 @@
     html, body {
       width: 100%;
       height: 100%;
-      height: 100dvh; /* Menyesuaikan layar penuh HP */
+      height: 100dvh;
       overflow: hidden;
       background: #120924;
       font-family: 'Press Start 2P', cursive;
@@ -41,29 +41,66 @@
       z-index: 99;
     }
 
-    /* CONTAINER KUIS LAYAR FULL HP */
-    .quiz-box {
-      background: #23113d;
-      border: 4px solid #ff0055;
-      box-shadow: 0 0 20px rgba(255, 0, 85, 0.4);
-      padding: 20px 15px;
+    /* SISTEM HALAMAN HALAMAN SETUP & KUIS */
+    .page {
+      display: none;
       width: 100%;
       max-width: 450px;
       height: 100%;
       max-height: 680px;
-      display: flex;
       flex-direction: column;
       justify-content: space-between;
       align-items: center;
       text-align: center;
+      background: #23113d;
+      border: 4px solid #ff0055;
+      box-shadow: 0 0 20px rgba(255, 0, 85, 0.4);
+      padding: 25px 15px;
+      border-radius: 12px;
       position: relative;
       z-index: 1;
-      border-radius: 12px;
     }
 
-    .header-box {
-      width: 100%;
+    .page.active {
+      display: flex;
     }
+
+    /* TAMPILAN HALAMAN SETUP (UPLOAD FOTO) */
+    .setup-title {
+      font-size: 0.8rem;
+      color: #00ffcc;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .upload-box {
+      border: 3px dashed #00ffcc;
+      border-radius: 12px;
+      padding: 25px 15px;
+      width: 100%;
+      background: rgba(0, 255, 204, 0.05);
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+
+    .upload-label {
+      font-size: 0.6rem;
+      color: #fff;
+      line-height: 1.6;
+    }
+
+    input[type="file"] { display: none; }
+
+    .file-name-info {
+      font-size: 0.55rem;
+      color: #ffd670;
+      margin-bottom: 20px;
+      word-break: break-all;
+      display: none;
+    }
+
+    /* KUIS BOX */
+    .header-box { width: 100%; }
 
     .progress {
       font-size: 0.6rem;
@@ -148,14 +185,26 @@
       margin-bottom: 20px;
     }
 
-    /* ANIMASI ZOOM OUT -> ZOOM IN UNTUK JARI TENGAH */
+    /* FOTO JAWABAN SALAH */
+    .wrong-photo {
+      width: 180px;
+      height: 180px;
+      object-fit: cover;
+      border: 4px solid #ff0055;
+      border-radius: 12px;
+      margin: 10px auto 20px auto;
+      display: none;
+      box-shadow: 0 0 15px rgba(255, 0, 85, 0.5);
+    }
+
+    /* ANIMASI ZOOM OUT -> ZOOM IN */
     @keyframes zoomOutZoomIn {
       0% {
         transform: scale(0.1);
         opacity: 0;
       }
       50% {
-        transform: scale(1.4);
+        transform: scale(1.35);
         opacity: 1;
       }
       75% {
@@ -167,18 +216,8 @@
       }
     }
 
-    .animated-hand {
+    .animated-wrong-photo {
       animation: zoomOutZoomIn 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    }
-
-    /* CANVAS PIXEL ART HAND TAJAM & HD */
-    #pixelHandCanvas {
-      width: 180px;
-      height: 180px;
-      margin: 10px auto 20px auto;
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
-      display: block;
     }
 
     .btn-next {
@@ -194,7 +233,15 @@
       border-radius: 8px;
     }
 
-    .btn-next:active {
+    .btn-next:disabled {
+      background: #555;
+      color: #888;
+      cursor: not-allowed;
+      border-color: #666;
+      box-shadow: none;
+    }
+
+    .btn-next:active:not(:disabled) {
       transform: scale(0.96);
     }
   </style>
@@ -203,7 +250,22 @@
 
   <canvas id="fireworksCanvas"></canvas>
 
-  <div class="quiz-box">
+  <!-- HALAMAN 1: UPLOAD FOTO JAWABAN SALAH -->
+  <div class="page active" id="setupPage">
+    <div class="setup-title">SIAPKAN KUIS CINTA 📸💖</div>
+    
+    <div class="upload-box" onclick="document.getElementById('photoInput').click()">
+      <div class="upload-label" id="uploadLabel">📁 Klik di sini untuk upload foto khusus (Jawaban Salah)</div>
+      <input type="file" id="photoInput" accept="image/*">
+    </div>
+
+    <div class="file-name-info" id="fileNameInfo">📄 File: <span id="fileNameText"></span></div>
+
+    <button class="btn-next" id="startBtn" disabled onclick="startQuiz()">MULAI KUIS ➔</button>
+  </div>
+
+  <!-- HALAMAN 2: LAYAR KUIS -->
+  <div class="page" id="quizPage">
     <div class="header-box">
       <div class="progress" id="progressText">SOAL 1 DARI 6</div>
       <div class="question-title" id="questionText">Loading...</div>
@@ -215,13 +277,46 @@
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal-content">
       <div class="modal-title" id="modalTitle">BENAR!</div>
-      <canvas id="pixelHandCanvas"></canvas>
+      <img id="wrongPhotoImg" class="wrong-photo" alt="Foto Jawaban Salah">
       <div class="modal-msg" id="modalMsg">Kata romantis...</div>
       <button class="btn-next" onclick="closeModal()">LANJUT ➔</button>
     </div>
   </div>
 
   <script>
+    let uploadedPhotoSrc = null;
+
+    const photoInput = document.getElementById('photoInput');
+    const uploadLabel = document.getElementById('uploadLabel');
+    const fileNameInfo = document.getElementById('fileNameInfo');
+    const fileNameText = document.getElementById('fileNameText');
+    const startBtn = document.getElementById('startBtn');
+    const wrongPhotoImg = document.getElementById('wrongPhotoImg');
+
+    // Menerima upload foto jawaban salah
+    photoInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      fileNameText.innerText = file.name;
+      fileNameInfo.style.display = 'block';
+      uploadLabel.innerText = "📁 Klik jika ingin mengganti foto";
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        uploadedPhotoSrc = event.target.result;
+        wrongPhotoImg.src = uploadedPhotoSrc;
+        startBtn.disabled = false;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function startQuiz() {
+      document.getElementById('setupPage').classList.remove('active');
+      document.getElementById('quizPage').classList.add('active');
+      loadQuestion();
+    }
+
     const questions = [
       {
         q: "1. Kapan tanggal jadian resmi kita?",
@@ -269,51 +364,6 @@
     const modalOverlay = document.getElementById('modalOverlay');
     const modalTitle = document.getElementById('modalTitle');
     const modalMsg = document.getElementById('modalMsg');
-    const handCanvas = document.getElementById('pixelHandCanvas');
-    const handCtx = handCanvas.getContext('2d');
-
-    // MENGGAMBAR PIXEL ART JARI TENGAH RESOLUSI TINGGI (DETAIL & TAJAM)
-    function drawPixelMiddleFinger() {
-      handCanvas.width = 20;
-      handCanvas.height = 20;
-      handCtx.clearRect(0, 0, 20, 20);
-
-      // Matrix 20x20 Pixel Art Jari Tengah
-      // 1: Outine Hitam, 2: Kulit Cerah, 3: Bayangan Kulit, 4: Merah Baju/Lengan
-      const matrix = [
-        [0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,1,1,1,0,1,2,1,0,1,1,1,0,0,0,0,0,0],
-        [0,0,1,2,2,1,1,2,2,1,1,2,2,1,1,0,0,0,0,0],
-        [0,0,1,2,3,1,2,2,2,1,2,2,3,1,2,1,0,0,0,0],
-        [0,0,1,2,3,1,2,2,2,1,2,2,3,1,2,1,0,0,0,0],
-        [0,0,0,1,1,2,2,2,2,2,2,2,2,1,2,1,0,0,0,0],
-        [0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0],
-        [0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0],
-        [0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0],
-        [0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0],
-        [0,0,0,1,1,2,2,2,2,2,2,2,2,2,1,1,0,0,0,0],
-        [0,0,0,0,1,3,3,3,3,3,3,3,3,3,1,0,0,0,0,0],
-        [0,0,0,0,1,4,4,4,4,4,4,4,4,4,1,0,0,0,0,0],
-        [0,0,0,0,1,4,4,4,4,4,4,4,4,4,1,0,0,0,0,0],
-        [0,0,0,0,1,4,4,4,4,4,4,4,4,4,1,0,0,0,0,0],
-        [0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0]
-      ];
-
-      for (let r = 0; r < 20; r++) {
-        for (let c = 0; c < 20; c++) {
-          if (matrix[r][c] === 1) handCtx.fillStyle = '#000000';
-          else if (matrix[r][c] === 2) handCtx.fillStyle = '#ffdbac';
-          else if (matrix[r][c] === 3) handCtx.fillStyle = '#e0a96d';
-          else if (matrix[r][c] === 4) handCtx.fillStyle = '#ff0055';
-          else continue;
-          handCtx.fillRect(c, r, 1, 1);
-        }
-      }
-    }
 
     function loadQuestion() {
       const q = questions[currentQ];
@@ -337,21 +387,19 @@
         modalTitle.innerText = "BENAR! 💖";
         modalTitle.style.color = "#00ffcc";
         modalMsg.innerText = q.romanticMsg;
-        handCanvas.style.display = "none";
-        handCanvas.classList.remove('animated-hand');
+        wrongPhotoImg.style.display = "none";
+        wrongPhotoImg.classList.remove('animated-wrong-photo');
         triggerHeartFireworks();
       } else {
-        // JAWABAN SALAH (EFEK ZOOM OUT KE ZOOM IN)
-        modalTitle.innerText = "SALAH NGGAK YA! 🖕";
+        // JAWABAN SALAH (MENAMPILKAN FOTO DENGAN ANIMASI ZOOM)
+        modalTitle.innerText = "SALAH NGGAK YA! 😜";
         modalTitle.style.color = "#ff0055";
-        modalMsg.innerText = "Parah banget sih salah! Jari tengah meluncur khusus buat kamu! 😜 Benerin gak!";
-        drawPixelMiddleFinger();
-        handCanvas.style.display = "block";
+        modalMsg.innerText = "Parah banget sih salah! Muka kamu/aku pas lagi ngambek meluncur khusus buat kamu!";
         
-        // Picu Ulang Animasi Zoom
-        handCanvas.classList.remove('animated-hand');
-        void handCanvas.offsetWidth; // Trigger Reflow
-        handCanvas.classList.add('animated-hand');
+        wrongPhotoImg.style.display = "block";
+        wrongPhotoImg.classList.remove('animated-wrong-photo');
+        void wrongPhotoImg.offsetWidth; // Trigger Reflow
+        wrongPhotoImg.classList.add('animated-wrong-photo');
       }
       modalOverlay.style.display = "flex";
     }
@@ -426,8 +474,6 @@
       requestAnimationFrame(updateParticles);
     }
     updateParticles();
-
-    loadQuestion();
   </script>
 </body>
 </html>
