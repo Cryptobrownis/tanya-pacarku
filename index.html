@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kuis Cinta Pixel 8-Bit 🎮💖</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #1a102f;
+      font-family: 'Press Start 2P', cursive;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      padding: 15px;
+      overflow-x: hidden;
+    }
+
+    /* KANVAS KEMBANG API */
+    #fireworksCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 99;
+    }
+
+    /* CONTAINER KUIS */
+    .quiz-box {
+      background: #2b1b4d;
+      border: 4px solid #ff0055;
+      box-shadow: 6px 6px 0px #000;
+      padding: 25px 20px;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .progress {
+      font-size: 0.6rem;
+      color: #ff0055;
+      margin-bottom: 15px;
+    }
+
+    .question-title {
+      font-size: 0.75rem;
+      color: #00ffcc;
+      line-height: 1.6;
+      margin-bottom: 25px;
+    }
+
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn-option {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.65rem;
+      padding: 14px 10px;
+      background: #3d266b;
+      color: #fff;
+      border: 3px solid #00ffcc;
+      box-shadow: 4px 4px 0px #000;
+      cursor: pointer;
+      transition: 0.1s;
+      line-height: 1.4;
+    }
+
+    .btn-option:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px #000;
+      background: #ff0055;
+    }
+
+    /* POPUP MODAL PIXEL */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: #110926;
+      border: 4px solid #fff;
+      box-shadow: 8px 8px 0px #ff0055;
+      padding: 25px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .modal-title {
+      font-size: 0.8rem;
+      margin-bottom: 15px;
+    }
+
+    .modal-msg {
+      font-size: 0.65rem;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    /* CANVAS PIXEL ART HAND */
+    #pixelHandCanvas {
+      width: 120px;
+      height: 120px;
+      margin: 10px auto 15px auto;
+      image-rendering: pixelated;
+      display: block;
+    }
+
+    .btn-next {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.65rem;
+      padding: 12px 20px;
+      background: #00ffcc;
+      color: #000;
+      border: 3px solid #fff;
+      box-shadow: 4px 4px 0px #000;
+      cursor: pointer;
+    }
+
+    .btn-next:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px #000;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="fireworksCanvas"></canvas>
+
+  <div class="quiz-box" id="quizBox">
+    <div class="progress" id="progressText">SOAL 1 DARI 6</div>
+    <div class="question-title" id="questionText">Loading...</div>
+    <div class="options-grid" id="optionsContainer"></div>
+  </div>
+
+  <!-- POPUP RESPONSE -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-content">
+      <div class="modal-title" id="modalTitle">BENAR!</div>
+      <canvas id="pixelHandCanvas"></canvas>
+      <div class="modal-msg" id="modalMsg">Kata romantis...</div>
+      <button class="btn-next" onclick="closeModal()">LANJUT ➔</button>
+    </div>
+  </div>
+
+  <script>
+    // DATA 6 PERTANYAAN (Bisa kamu ubah opsi & kata romantisnya)
+    const questions = [
+      {
+        q: "1. Kapan tanggal jadian resmi kita?",
+        options: ["12 Oktober", "14 Februari", "25 Desember"],
+        correct: 0,
+        romanticMsg: "Inget tanggal jadian aja udah bikin makin sayang! Kamu emang pacar terbaik! 💖✨"
+      },
+      {
+        q: "2. Makanan favorit aku kalau lagi ngambek?",
+        options: ["Bakso Pedas", "Seblak", "Es Krim Cokelat"],
+        correct: 2,
+        romanticMsg: "Paham banget cara bikin aku seneng lagi. Kamu jawaban dari segala rasa manisku! 🍦💕"
+      },
+      {
+        q: "3. Tempat pertama kali kita kencan?",
+        options: ["Bioskop", "Taman Kota", "Kedai Kopi"],
+        correct: 2,
+        romanticMsg: "Kopi hari itu pahit, tapi tatapan mata kamu bikin semuanya terasa manis banget! ☕ merangsang rasa rindu!"
+      },
+      {
+        q: "4. Siapa yang paling sering ngaku kangen duluan?",
+        options: ["Aku dong!", "Kamu lah!", "Dua-duanya sama aja"],
+        correct: 1,
+        romanticMsg: "Soalnya rasa kangen aku ke kamu itu gak ada habisnya tiap detik! 😘💗"
+      },
+      {
+        q: "5. Kebiasaan aku kalau mau tidur apa hayo?",
+        options: ["Main Game", "Cari Alasan Telponan", "Dengerin Lagu"],
+        correct: 1,
+        romanticMsg: "Suara kamu itu lagu pengantar tidur paling merdu di dunia tahu! 💤💘"
+      },
+      {
+        q: "6. Pertanyaan terakhir, kamu sayang banget gak sama aku?",
+        options: ["Sayang banget!", "Biasa aja sih", "Gak sayang sama sekali"],
+        correct: 0,
+        romanticMsg: "Aku juga sayang bangeeeet sama kamu! Makasih udah jawab semua dengan benar! 💍💖🎉"
+      }
+    ];
+
+    let currentQ = 0;
+
+    const questionText = document.getElementById('questionText');
+    const optionsContainer = document.getElementById('optionsContainer');
+    const progressText = document.getElementById('progressText');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMsg = document.getElementById('modalMsg');
+    const handCanvas = document.getElementById('pixelHandCanvas');
+    const handCtx = handCanvas.getContext('2d');
+
+    // MENGGAMBAR PIXEL ART JARI TENGER (FUCK YOU)
+    function drawPixelMiddleFinger() {
+      handCanvas.width = 16;
+      handCanvas.height = 16;
+      handCtx.clearRect(0, 0, 16, 16);
+
+      // Matrix 16x16 Pixel Art Tangan Jari Tengah
+      // 1: Garis Luar/Hitam, 2: Kulit (#f1c27d), 3: Bayangan (#d49b4b)
+      const matrix = [
+        [0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,0],
+        [0,0,0,1,1,1,1,2,1,1,1,1,0,0,0,0],
+        [0,0,1,2,2,1,2,2,1,2,2,1,1,0,0,0],
+        [0,0,1,2,2,1,2,2,1,2,2,1,2,1,0,0],
+        [0,0,1,2,3,2,2,2,2,2,3,2,2,1,0,0],
+        [0,0,0,1,2,2,2,2,2,2,2,2,1,0,0,0],
+        [0,0,0,1,2,2,2,2,2,2,2,2,1,0,0,0],
+        [0,0,0,1,2,2,2,2,2,2,2,2,1,0,0,0],
+        [0,0,0,1,2,2,2,2,2,2,2,2,1,0,0,0],
+        [0,0,0,1,1,2,2,2,2,2,2,1,1,0,0,0],
+        [0,0,0,0,1,2,2,2,2,2,2,1,0,0,0,0],
+        [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+      ];
+
+      for (let r = 0; r < 16; r++) {
+        for (let c = 0; c < 16; c++) {
+          if (matrix[r][c] === 1) handCtx.fillStyle = '#000';
+          else if (matrix[r][c] === 2) handCtx.fillStyle = '#f1c27d';
+          else if (matrix[r][c] === 3) handCtx.fillStyle = '#d49b4b';
+          else continue;
+          handCtx.fillRect(c, r, 1, 1);
+        }
+      }
+    }
+
+    function loadQuestion() {
+      const q = questions[currentQ];
+      progressText.innerText = `SOAL ${currentQ + 1} DARI ${questions.length}`;
+      questionText.innerText = q.q;
+      optionsContainer.innerHTML = '';
+
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-option';
+        btn.innerText = opt;
+        btn.onclick = () => checkAnswer(idx);
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(selectedIdx) {
+      const q = questions[currentQ];
+      if (selectedIdx === q.correct) {
+        // JAWABAN BENAR
+        modalTitle.innerText = "BENAR! 💖";
+        modalTitle.style.color = "#00ffcc";
+        modalMsg.innerText = q.romanticMsg;
+        handCanvas.style.display = "none";
+        triggerHeartFireworks();
+      } else {
+        // JAWABAN SALAH
+        modalTitle.innerText = "SALAH NGGAK YA! 🖕";
+        modalTitle.style.color = "#ff0055";
+        modalMsg.innerText = "Parah banget sih salah! Jari tengah meluncur khusus buat kamu! 😜 Benerin gak!";
+        drawPixelMiddleFinger();
+        handCanvas.style.display = "block";
+      }
+      modalOverlay.style.display = "flex";
+    }
+
+    function closeModal() {
+      modalOverlay.style.display = "none";
+      if (modalTitle.innerText.includes("BENAR")) {
+        currentQ++;
+        if (currentQ < questions.length) {
+          loadQuestion();
+        } else {
+          // SELESAI
+          progressText.innerText = "KUIS SELESAI!";
+          questionText.innerText = "Selamat sayang! Kamu udah menyelesaikan semua pertanyaan dengan sempurna! I Love You! 💌🎉";
+          optionsContainer.innerHTML = `<button class="btn-option" onclick="location.reload()">MAIN LAGI 🔄</button>`;
+        }
+      }
+    }
+
+    // SYSTEM KEMBANG API BENTUK HATI (CANVAS PARTICLE)
+    const fwCanvas = document.getElementById('fireworksCanvas');
+    const fwCtx = fwCanvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+      fwCanvas.width = window.innerWidth;
+      fwCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function triggerHeartFireworks() {
+      particles = [];
+      const centerX = fwCanvas.width / 2;
+      const centerY = fwCanvas.height / 3;
+
+      // Partikel meledak membentuk Persamaan Kurva Hati
+      for (let i = 0; i < 180; i++) {
+        const t = (Math.PI / 90) * i;
+        // Formula matematika bentuk hati
+        const x = 16 * Math.pow(Math.sin(t), 3);
+        const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+
+        particles.push({
+          x: centerX,
+          y: centerY,
+          vx: x * (Math.random() * 0.4 + 0.6),
+          vy: y * (Math.random() * 0.4 + 0.6),
+          size: Math.floor(Math.random() * 4 + 3), // Ukuran piksel kotak
+          color: ['#ff0055', '#ff6699', '#ff3300', '#00ffcc', '#ffffff'][Math.floor(Math.random() * 5)],
+          alpha: 1,
+          life: 0.015
+        });
+      }
+    }
+
+    function updateParticles() {
+      fwCtx.clearRect(0, 0, fwCanvas.width, fwCanvas.height);
+
+      particles.forEach((p, idx) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.05; // Efek Gravitasi
+        p.alpha -= p.life;
+
+        if (p.alpha <= 0) {
+          particles.splice(idx, 1);
+        } else {
+          fwCtx.globalAlpha = p.alpha;
+          fwCtx.fillStyle = p.color;
+          // Render sebagai piksel kotak (Pixel Style)
+          fwCtx.fillRect(p.x, p.y, p.size, p.size);
+        }
+      });
+
+      requestAnimationFrame(updateParticles);
+    }
+    updateParticles();
+
+    // Jalankan Kuis Pertama Kali
+    loadQuestion();
+  </script>
+</body>
+</html>
