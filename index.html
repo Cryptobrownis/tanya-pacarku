@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Kuis Cinta Pixel Fullscreen 🎮💖</title>
+  <title>Kuis seberapa tau kamu</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
     * { 
@@ -41,65 +41,26 @@
       z-index: 99;
     }
 
-    /* SISTEM HALAMAN HALAMAN SETUP & KUIS */
-    .page {
-      display: none;
+    /* CONTAINER KUIS LAYAR FULL HP */
+    .quiz-box {
+      background: #23113d;
+      border: 4px solid #ff0055;
+      box-shadow: 0 0 20px rgba(255, 0, 85, 0.4);
+      padding: 20px 15px;
       width: 100%;
       max-width: 450px;
       height: 100%;
       max-height: 680px;
+      display: flex;
       flex-direction: column;
       justify-content: space-between;
       align-items: center;
       text-align: center;
-      background: #23113d;
-      border: 4px solid #ff0055;
-      box-shadow: 0 0 20px rgba(255, 0, 85, 0.4);
-      padding: 25px 15px;
-      border-radius: 12px;
       position: relative;
       z-index: 1;
-    }
-
-    .page.active {
-      display: flex;
-    }
-
-    /* TAMPILAN HALAMAN SETUP (UPLOAD FOTO) */
-    .setup-title {
-      font-size: 0.8rem;
-      color: #00ffcc;
-      line-height: 1.6;
-      margin-bottom: 20px;
-    }
-
-    .upload-box {
-      border: 3px dashed #00ffcc;
       border-radius: 12px;
-      padding: 25px 15px;
-      width: 100%;
-      background: rgba(0, 255, 204, 0.05);
-      cursor: pointer;
-      margin-bottom: 15px;
     }
 
-    .upload-label {
-      font-size: 0.6rem;
-      color: #fff;
-      line-height: 1.6;
-    }
-
-    input[type="file"] { display: none; }
-
-    .file-name-info {
-      font-size: 0.55rem;
-      color: #ffd670;
-      margin-bottom: 20px;
-      word-break: break-all;
-      display: none;
-    }
-
-    /* KUIS BOX */
     .header-box { width: 100%; }
 
     .progress {
@@ -217,7 +178,7 @@
     }
 
     .animated-wrong-photo {
-      animation: zoomOutZoomIn 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      animation: zoomOutZoomIn 1.10s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
 
     .btn-next {
@@ -233,15 +194,7 @@
       border-radius: 8px;
     }
 
-    .btn-next:disabled {
-      background: #555;
-      color: #888;
-      cursor: not-allowed;
-      border-color: #666;
-      box-shadow: none;
-    }
-
-    .btn-next:active:not(:disabled) {
+    .btn-next:active {
       transform: scale(0.96);
     }
   </style>
@@ -250,22 +203,7 @@
 
   <canvas id="fireworksCanvas"></canvas>
 
-  <!-- HALAMAN 1: UPLOAD FOTO JAWABAN SALAH -->
-  <div class="page active" id="setupPage">
-    <div class="setup-title">SIAPKAN KUIS CINTA 📸💖</div>
-    
-    <div class="upload-box" onclick="document.getElementById('photoInput').click()">
-      <div class="upload-label" id="uploadLabel">📁 Klik di sini untuk upload foto khusus (Jawaban Salah)</div>
-      <input type="file" id="photoInput" accept="image/*">
-    </div>
-
-    <div class="file-name-info" id="fileNameInfo">📄 File: <span id="fileNameText"></span></div>
-
-    <button class="btn-next" id="startBtn" disabled onclick="startQuiz()">MULAI KUIS ➔</button>
-  </div>
-
-  <!-- HALAMAN 2: LAYAR KUIS -->
-  <div class="page" id="quizPage">
+  <div class="quiz-box">
     <div class="header-box">
       <div class="progress" id="progressText">SOAL 1 DARI 6</div>
       <div class="question-title" id="questionText">Loading...</div>
@@ -284,75 +222,70 @@
   </div>
 
   <script>
-    let uploadedPhotoSrc = null;
-
-    const photoInput = document.getElementById('photoInput');
-    const uploadLabel = document.getElementById('uploadLabel');
-    const fileNameInfo = document.getElementById('fileNameInfo');
-    const fileNameText = document.getElementById('fileNameText');
-    const startBtn = document.getElementById('startBtn');
-    const wrongPhotoImg = document.getElementById('wrongPhotoImg');
-
-    // Menerima upload foto jawaban salah
-    photoInput.addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      fileNameText.innerText = file.name;
-      fileNameInfo.style.display = 'block';
-      uploadLabel.innerText = "📁 Klik jika ingin mengganti foto";
-
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        uploadedPhotoSrc = event.target.result;
-        wrongPhotoImg.src = uploadedPhotoSrc;
-        startBtn.disabled = false;
-      };
-      reader.readAsDataURL(file);
-    });
-
-    function startQuiz() {
-      document.getElementById('setupPage').classList.remove('active');
-      document.getElementById('quizPage').classList.add('active');
-      loadQuestion();
-    }
-
+    // ----------------------------------------------------------------------
+    // MASUKKAN NAMA FOTO & TEKS BERBEDA SESUAI PILIHAN JAWABAN YANG SALAH (B/C)
+    // index 0 = Pilihan A, index 1 = Pilihan B, index 2 = Pilihan C
+    // ----------------------------------------------------------------------
     const questions = [
       {
-        q: "1. Kapan tanggal jadian resmi kita?",
-        options: ["12 Oktober", "14 Februari", "25 Desember"],
+        q: "1. Anak keberapa aku ?",
+        options: ["6", "4", "5"],
         correct: 0,
-        romanticMsg: "Inget tanggal jadian aja udah bikin makin sayang! Kamu emang pacar terbaik! 💖✨"
+        romanticMsg: "setau itu kamu tentang aku sengg, makin sayanggg 💖✨",
+        wrongResponses: {
+          1: { msg: "kapan gue punya adek eaaaaa 😡", photo: "fuck.jpg" },
+          2: { msg: "seengga tau itu lu tuh silsilah keluarga kaisar 🙈", photo: "wadehel.jpg" }
+        }
       },
       {
-        q: "2. Makanan favorit aku kalau lagi ngambek?",
-        options: ["Bakso Pedas", "Seblak", "Es Krim Cokelat"],
+        q: "2. Makanan favorit aku tau ga apa?",
+        options: ["tahu genjot", "Seblak", "sate"],
         correct: 2,
-        romanticMsg: "Paham banget cara bikin aku seneng lagi. Kamu jawaban dari segala rasa manisku! 🍦💕"
+        romanticMsg: "manis gurih pedesnya kacang, sama kaya kangen aku ke kamu sayang, emmm nagihh💕",
+        wrongResponses: {
+          0: { msg: "kamu mau di genjott sayang 🥵🥵🥵", photo: "wadehel.jpg" },
+          1: { msg: "Seblak? cowo mana lg nih ?? ngaku aja ngaku", photo: "fuck.jpg" }
+        }
       },
       {
-        q: "3. Tempat pertama kali kita kencan?",
-        options: ["Bioskop", "Taman Kota", "Kedai Kopi"],
+        q: "3. Pulang kerja biasanya aku ngapain aja??",
+        options: ["turu", "aku VC", "VC aku dan ngopi"],
         correct: 2,
-        romanticMsg: "Kopi hari itu pahit, tapi tatapan mata kamu bikin semuanya terasa manis banget! ☕💖"
+        romanticMsg: "kebiasaan aku kamu setau itu sayangg, manis banget sih kamu yang! ☕💖",
+        wrongResponses: {
+          0: { msg: "oooo gitu, jadi mending turu? baiklahh", photo: "fuck.jpg" },
+          1: { msg: "kamu vc? baiklahh sepertinya ada kesalah pahaman dimari", photo: "wadehel.jpg" }
+        }
       },
       {
         q: "4. Siapa yang paling sering ngaku kangen duluan?",
-        options: ["Aku dong!", "Kamu lah!", "Dua-duanya sama aja"],
+        options: ["kamu dong!", "aku lah!", "ga dua-duanya"],
         correct: 1,
-        romanticMsg: "Soalnya rasa kangen aku ke kamu itu gak ada habisnya tiap detik! 😘💗"
+        romanticMsg: "Makasih yaa sayangnya akuu, udah kangenn terus. aku jg kangen mulu tauu 😘💗",
+        wrongResponses: {
+          0: { msg: "WKWKWKWK yaa gmn yaaa ", photo: "wadehel.jpg" },
+          2: { msg: "DEYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY", photo: "fuck.jpg" }
+        }
       },
       {
-        q: "5. Kebiasaan aku kalau mau tidur apa hayo?",
-        options: ["Main Game", "Cari Alasan Telponan", "Dengerin Lagu"],
+        q: "5. Kebiasaan aku kalau kangen apa coba?",
+        options: ["pura-pura gatau", "iseng", "tidur seharian"],
         correct: 1,
-        romanticMsg: "Suara kamu itu lagu pengantar tidur paling merdu di dunia tahu! 💤💘"
+        romanticMsg: "kamu tuh gemesin banget tau yangg, lucuu. hehe tengil-tengil gini kau sayang tau ke kamu tuh",
+        wrongResponses: {
+          0: { msg: "seengga tau itu kah lu soal gueee 🖕🖕🖕", photo: "fuck.jpg" },
+          2: { msg: "yakinn tidurrr, apa ga di blok eaaaa", photo: "wadehel.jpg" }
+        }
       },
       {
         q: "6. Pertanyaan terakhir, kamu sayang banget gak sama aku?",
-        options: ["Sayang banget!", "Biasa aja sih", "Gak sayang sama sekali"],
+        options: ["Sayang banget!", "Sayang aja", "B aja ya"],
         correct: 0,
-        romanticMsg: "Aku juga sayang bangeeeet sama kamu! Makasih udah jawab semua dengan benar! 💍💖🎉"
+        romanticMsg: "Aku juga sayang kamu yang, gatau klo gada kamu sesepi apa nanti 💍💖🎉",
+        wrongResponses: {
+          1: { msg: "sayang aja?? sebiasa itu kah, de helll", photo: "wadehel.jpg" },
+          2: { msg: "WKWKWKWK, centang satu WA, poto profil gada FIXX", photo: "fuck.jpg" }
+        }
       }
     ];
 
@@ -364,6 +297,7 @@
     const modalOverlay = document.getElementById('modalOverlay');
     const modalTitle = document.getElementById('modalTitle');
     const modalMsg = document.getElementById('modalMsg');
+    const wrongPhotoImg = document.getElementById('wrongPhotoImg');
 
     function loadQuestion() {
       const q = questions[currentQ];
@@ -391,14 +325,17 @@
         wrongPhotoImg.classList.remove('animated-wrong-photo');
         triggerHeartFireworks();
       } else {
-        // JAWABAN SALAH (MENAMPILKAN FOTO DENGAN ANIMASI ZOOM)
+        // JAWABAN SALAH (AMBIL SPESIFIK BERDASARKAN TOMBOL YANG DIKLIK)
+        const wrongData = q.wrongResponses[selectedIdx];
+        
         modalTitle.innerText = "SALAH NGGAK YA! 😜";
         modalTitle.style.color = "#ff0055";
-        modalMsg.innerText = "Parah banget sih salah! Muka kamu/aku pas lagi ngambek meluncur khusus buat kamu!";
+        modalMsg.innerText = wrongData.msg;
         
+        wrongPhotoImg.src = wrongData.photo;
         wrongPhotoImg.style.display = "block";
         wrongPhotoImg.classList.remove('animated-wrong-photo');
-        void wrongPhotoImg.offsetWidth; // Trigger Reflow
+        void wrongPhotoImg.offsetWidth; // Trigger Reflow animasi
         wrongPhotoImg.classList.add('animated-wrong-photo');
       }
       modalOverlay.style.display = "flex";
@@ -474,6 +411,8 @@
       requestAnimationFrame(updateParticles);
     }
     updateParticles();
+
+    loadQuestion();
   </script>
 </body>
 </html>
