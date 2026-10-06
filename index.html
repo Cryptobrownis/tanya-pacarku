@@ -2,82 +2,112 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kuis Cinta Pixel 8-Bit 🎮💖</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kuis Cinta Pixel Fullscreen 🎮💖</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #1a102f;
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      height: 100dvh; /* Menyesuaikan layar penuh HP */
+      overflow: hidden;
+      background: #120924;
       font-family: 'Press Start 2P', cursive;
-      min-height: 100vh;
+      color: #fff;
+    }
+
+    body {
       display: flex;
       justify-content: center;
       align-items: center;
-      color: #fff;
       padding: 15px;
-      overflow-x: hidden;
     }
 
-    /* KANVAS KEMBANG API */
+    /* KANVAS KEMBANG API FULLSCREEN */
     #fireworksCanvas {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
-      height: 100vh;
+      height: 100dvh;
       pointer-events: none;
       z-index: 99;
     }
 
-    /* CONTAINER KUIS */
+    /* CONTAINER KUIS LAYAR FULL HP */
     .quiz-box {
-      background: #2b1b4d;
+      background: #23113d;
       border: 4px solid #ff0055;
-      box-shadow: 6px 6px 0px #000;
-      padding: 25px 20px;
-      max-width: 500px;
+      box-shadow: 0 0 20px rgba(255, 0, 85, 0.4);
+      padding: 20px 15px;
       width: 100%;
+      max-width: 450px;
+      height: 100%;
+      max-height: 680px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
       text-align: center;
       position: relative;
       z-index: 1;
+      border-radius: 12px;
+    }
+
+    .header-box {
+      width: 100%;
     }
 
     .progress {
       font-size: 0.6rem;
       color: #ff0055;
-      margin-bottom: 15px;
+      margin-bottom: 12px;
+      letter-spacing: 1px;
     }
 
     .question-title {
       font-size: 0.75rem;
       color: #00ffcc;
       line-height: 1.6;
-      margin-bottom: 25px;
+      margin-bottom: 15px;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .options-grid {
       display: flex;
       flex-direction: column;
       gap: 12px;
+      width: 100%;
+      margin-bottom: 10px;
     }
 
     .btn-option {
       font-family: 'Press Start 2P', cursive;
       font-size: 0.65rem;
-      padding: 14px 10px;
-      background: #3d266b;
+      padding: 16px 12px;
+      background: #351a5c;
       color: #fff;
       border: 3px solid #00ffcc;
       box-shadow: 4px 4px 0px #000;
       cursor: pointer;
-      transition: 0.1s;
+      transition: transform 0.1s;
       line-height: 1.4;
+      width: 100%;
+      border-radius: 8px;
     }
 
     .btn-option:active {
-      transform: translate(2px, 2px);
-      box-shadow: 2px 2px 0px #000;
+      transform: scale(0.96);
       background: #ff0055;
     }
 
@@ -87,8 +117,8 @@
       top: 0;
       left: 0;
       width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.85);
+      height: 100dvh;
+      background: rgba(0, 0, 0, 0.9);
       display: none;
       justify-content: center;
       align-items: center;
@@ -97,17 +127,18 @@
     }
 
     .modal-content {
-      background: #110926;
+      background: #180b30;
       border: 4px solid #fff;
-      box-shadow: 8px 8px 0px #ff0055;
-      padding: 25px;
-      max-width: 400px;
+      box-shadow: 0 0 25px rgba(0, 255, 204, 0.5);
+      padding: 25px 15px;
+      max-width: 380px;
       width: 100%;
       text-align: center;
+      border-radius: 12px;
     }
 
     .modal-title {
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       margin-bottom: 15px;
     }
 
@@ -117,29 +148,54 @@
       margin-bottom: 20px;
     }
 
-    /* CANVAS PIXEL ART HAND */
+    /* ANIMASI ZOOM OUT -> ZOOM IN UNTUK JARI TENGAH */
+    @keyframes zoomOutZoomIn {
+      0% {
+        transform: scale(0.1);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.4);
+        opacity: 1;
+      }
+      75% {
+        transform: scale(0.85);
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .animated-hand {
+      animation: zoomOutZoomIn 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    /* CANVAS PIXEL ART HAND TAJAM & HD */
     #pixelHandCanvas {
-      width: 120px;
-      height: 120px;
-      margin: 10px auto 15px auto;
+      width: 180px;
+      height: 180px;
+      margin: 10px auto 20px auto;
       image-rendering: pixelated;
+      image-rendering: crisp-edges;
       display: block;
     }
 
     .btn-next {
       font-family: 'Press Start 2P', cursive;
       font-size: 0.65rem;
-      padding: 12px 20px;
+      padding: 14px 20px;
       background: #00ffcc;
       color: #000;
       border: 3px solid #fff;
       box-shadow: 4px 4px 0px #000;
       cursor: pointer;
+      width: 100%;
+      border-radius: 8px;
     }
 
     .btn-next:active {
-      transform: translate(2px, 2px);
-      box-shadow: 2px 2px 0px #000;
+      transform: scale(0.96);
     }
   </style>
 </head>
@@ -147,9 +203,11 @@
 
   <canvas id="fireworksCanvas"></canvas>
 
-  <div class="quiz-box" id="quizBox">
-    <div class="progress" id="progressText">SOAL 1 DARI 6</div>
-    <div class="question-title" id="questionText">Loading...</div>
+  <div class="quiz-box">
+    <div class="header-box">
+      <div class="progress" id="progressText">SOAL 1 DARI 6</div>
+      <div class="question-title" id="questionText">Loading...</div>
+    </div>
     <div class="options-grid" id="optionsContainer"></div>
   </div>
 
@@ -164,7 +222,6 @@
   </div>
 
   <script>
-    // DATA 6 PERTANYAAN (Bisa kamu ubah opsi & kata romantisnya)
     const questions = [
       {
         q: "1. Kapan tanggal jadian resmi kita?",
@@ -182,7 +239,7 @@
         q: "3. Tempat pertama kali kita kencan?",
         options: ["Bioskop", "Taman Kota", "Kedai Kopi"],
         correct: 2,
-        romanticMsg: "Kopi hari itu pahit, tapi tatapan mata kamu bikin semuanya terasa manis banget! ☕ merangsang rasa rindu!"
+        romanticMsg: "Kopi hari itu pahit, tapi tatapan mata kamu bikin semuanya terasa manis banget! ☕💖"
       },
       {
         q: "4. Siapa yang paling sering ngaku kangen duluan?",
@@ -215,38 +272,43 @@
     const handCanvas = document.getElementById('pixelHandCanvas');
     const handCtx = handCanvas.getContext('2d');
 
-    // MENGGAMBAR PIXEL ART JARI TENGER (FUCK YOU)
+    // MENGGAMBAR PIXEL ART JARI TENGAH RESOLUSI TINGGI (DETAIL & TAJAM)
     function drawPixelMiddleFinger() {
-      handCanvas.width = 16;
-      handCanvas.height = 16;
-      handCtx.clearRect(0, 0, 16, 16);
+      handCanvas.width = 20;
+      handCanvas.height = 20;
+      handCtx.clearRect(0, 0, 20, 20);
 
-      // Matrix 16x16 Pixel Art Tangan Jari Tengah
-      // 1: Garis Luar/Hitam, 2: Kulit (#f1c27d), 3: Bayangan (#d49b4b)
+      // Matrix 20x20 Pixel Art Jari Tengah
+      // 1: Outine Hitam, 2: Kulit Cerah, 3: Bayangan Kulit, 4: Merah Baju/Lengan
       const matrix = [
-        [0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,0],
-        [0,0,0,1,1,1,1,2,1,1,1,1,0,0,0,0],
-        [0,0,1,2,2,1,2,2,1,2,2,1,1,0,0,0],
-        [0,0,1,2,2,1,2,2,1,2,2,1,2,1,0,0],
-        [0,0,1,2,3,2,2,2,2,2,3,2,2,1,0,0],
-        [0,0,0,1,2,2,2,2,2,2,2,2,1,0,0,0],
-        [0,0,0,1,2,2,2,2,2,2,2,2,1,0,0,0],
-        [0,0,0,1,2,2,2,2,2,2,2,2,1,0,0,0],
-        [0,0,0,1,2,2,2,2,2,2,2,2,1,0,0,0],
-        [0,0,0,1,1,2,2,2,2,2,2,1,1,0,0,0],
-        [0,0,0,0,1,2,2,2,2,2,2,1,0,0,0,0],
-        [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        [0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,1,1,1,0,1,2,1,0,1,1,1,0,0,0,0,0,0],
+        [0,0,1,2,2,1,1,2,2,1,1,2,2,1,1,0,0,0,0,0],
+        [0,0,1,2,3,1,2,2,2,1,2,2,3,1,2,1,0,0,0,0],
+        [0,0,1,2,3,1,2,2,2,1,2,2,3,1,2,1,0,0,0,0],
+        [0,0,0,1,1,2,2,2,2,2,2,2,2,1,2,1,0,0,0,0],
+        [0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0],
+        [0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0],
+        [0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0],
+        [0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0],
+        [0,0,0,1,1,2,2,2,2,2,2,2,2,2,1,1,0,0,0,0],
+        [0,0,0,0,1,3,3,3,3,3,3,3,3,3,1,0,0,0,0,0],
+        [0,0,0,0,1,4,4,4,4,4,4,4,4,4,1,0,0,0,0,0],
+        [0,0,0,0,1,4,4,4,4,4,4,4,4,4,1,0,0,0,0,0],
+        [0,0,0,0,1,4,4,4,4,4,4,4,4,4,1,0,0,0,0,0],
+        [0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0]
       ];
 
-      for (let r = 0; r < 16; r++) {
-        for (let c = 0; c < 16; c++) {
-          if (matrix[r][c] === 1) handCtx.fillStyle = '#000';
-          else if (matrix[r][c] === 2) handCtx.fillStyle = '#f1c27d';
-          else if (matrix[r][c] === 3) handCtx.fillStyle = '#d49b4b';
+      for (let r = 0; r < 20; r++) {
+        for (let c = 0; c < 20; c++) {
+          if (matrix[r][c] === 1) handCtx.fillStyle = '#000000';
+          else if (matrix[r][c] === 2) handCtx.fillStyle = '#ffdbac';
+          else if (matrix[r][c] === 3) handCtx.fillStyle = '#e0a96d';
+          else if (matrix[r][c] === 4) handCtx.fillStyle = '#ff0055';
           else continue;
           handCtx.fillRect(c, r, 1, 1);
         }
@@ -276,14 +338,20 @@
         modalTitle.style.color = "#00ffcc";
         modalMsg.innerText = q.romanticMsg;
         handCanvas.style.display = "none";
+        handCanvas.classList.remove('animated-hand');
         triggerHeartFireworks();
       } else {
-        // JAWABAN SALAH
+        // JAWABAN SALAH (EFEK ZOOM OUT KE ZOOM IN)
         modalTitle.innerText = "SALAH NGGAK YA! 🖕";
         modalTitle.style.color = "#ff0055";
         modalMsg.innerText = "Parah banget sih salah! Jari tengah meluncur khusus buat kamu! 😜 Benerin gak!";
         drawPixelMiddleFinger();
         handCanvas.style.display = "block";
+        
+        // Picu Ulang Animasi Zoom
+        handCanvas.classList.remove('animated-hand');
+        void handCanvas.offsetWidth; // Trigger Reflow
+        handCanvas.classList.add('animated-hand');
       }
       modalOverlay.style.display = "flex";
     }
@@ -295,7 +363,6 @@
         if (currentQ < questions.length) {
           loadQuestion();
         } else {
-          // SELESAI
           progressText.innerText = "KUIS SELESAI!";
           questionText.innerText = "Selamat sayang! Kamu udah menyelesaikan semua pertanyaan dengan sempurna! I Love You! 💌🎉";
           optionsContainer.innerHTML = `<button class="btn-option" onclick="location.reload()">MAIN LAGI 🔄</button>`;
@@ -303,7 +370,7 @@
       }
     }
 
-    // SYSTEM KEMBANG API BENTUK HATI (CANVAS PARTICLE)
+    // SYSTEM KEMBANG API BENTUK HATI
     const fwCanvas = document.getElementById('fireworksCanvas');
     const fwCtx = fwCanvas.getContext('2d');
     let particles = [];
@@ -318,12 +385,10 @@
     function triggerHeartFireworks() {
       particles = [];
       const centerX = fwCanvas.width / 2;
-      const centerY = fwCanvas.height / 3;
+      const centerY = fwCanvas.height / 2.5;
 
-      // Partikel meledak membentuk Persamaan Kurva Hati
       for (let i = 0; i < 180; i++) {
         const t = (Math.PI / 90) * i;
-        // Formula matematika bentuk hati
         const x = 16 * Math.pow(Math.sin(t), 3);
         const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
 
@@ -332,7 +397,7 @@
           y: centerY,
           vx: x * (Math.random() * 0.4 + 0.6),
           vy: y * (Math.random() * 0.4 + 0.6),
-          size: Math.floor(Math.random() * 4 + 3), // Ukuran piksel kotak
+          size: Math.floor(Math.random() * 5 + 4),
           color: ['#ff0055', '#ff6699', '#ff3300', '#00ffcc', '#ffffff'][Math.floor(Math.random() * 5)],
           alpha: 1,
           life: 0.015
@@ -346,7 +411,7 @@
       particles.forEach((p, idx) => {
         p.x += p.vx;
         p.y += p.vy;
-        p.vy += 0.05; // Efek Gravitasi
+        p.vy += 0.05;
         p.alpha -= p.life;
 
         if (p.alpha <= 0) {
@@ -354,7 +419,6 @@
         } else {
           fwCtx.globalAlpha = p.alpha;
           fwCtx.fillStyle = p.color;
-          // Render sebagai piksel kotak (Pixel Style)
           fwCtx.fillRect(p.x, p.y, p.size, p.size);
         }
       });
@@ -363,7 +427,6 @@
     }
     updateParticles();
 
-    // Jalankan Kuis Pertama Kali
     loadQuestion();
   </script>
 </body>
